@@ -1,6 +1,6 @@
 {
   "name": "fm26-moneyball-hq",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "FM26 Moneyball HQ - recruitment and transfer intelligence for Football Manager 26",
   "main": "electron/main.cjs",
@@ -12,52 +12,17 @@
     "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never",
     "test": "node --test tests/*.test.cjs"
   },
-  "dependencies": {
-    "better-sqlite3": "12.11.1",
-    "papaparse": "^5.5.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.2",
-    "cross-env": "^7.0.3",
-    "electron": "44.1.1",
-    "electron-builder": "26.15.3",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0",
-    "wait-on": "^8.0.2"
-  },
+  "dependencies": { "better-sqlite3": "12.11.1", "papaparse": "^5.5.2", "react": "^18.3.1", "react-dom": "^18.3.1" },
+  "devDependencies": { "@types/react": "^18.3.18", "@types/react-dom": "^18.3.5", "@vitejs/plugin-react": "^4.3.4", "concurrently": "^9.1.2", "cross-env": "^7.0.3", "electron": "44.1.1", "electron-builder": "26.15.3", "typescript": "^5.7.3", "vite": "^6.1.0", "wait-on": "^8.0.2" },
   "build": {
     "appId": "de.fm26.moneyballhq",
     "productName": "FM26 MONEYBALL HQ",
     "asar": true,
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "asarUnpack": [
-      "node_modules/better-sqlite3/**/*"
-    ],
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "asarUnpack": ["node_modules/better-sqlite3/**/*"],
     "npmRebuild": true,
-    "directories": {
-      "output": "release"
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "FM26 MONEYBALL HQ",
-      "deleteAppDataOnUninstall": false
-    }
+    "directories": { "output": "release" },
+    "win": { "target": ["nsis"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "FM26 MONEYBALL HQ", "deleteAppDataOnUninstall": false }
   }
 }
