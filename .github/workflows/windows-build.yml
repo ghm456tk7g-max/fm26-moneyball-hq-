@@ -3,6 +3,8 @@ name: Windows Build
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,10 +15,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies
-        run: npm install
-      - name: Run tests
-        run: npm test
+        run: npm ci
       - name: Build installer
         run: npm run dist:win
       - name: Upload installer
