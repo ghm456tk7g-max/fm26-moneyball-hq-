@@ -1,5 +1,4 @@
 const clamp=(n,min=0,max=100)=>Math.max(min,Math.min(max,n));
-const safe=(n,fallback=null)=>Number.isFinite(n)?n:fallback;
 const per90=(value,minutes)=>Number.isFinite(value)&&minutes>0?(value*90)/minutes:null;
 
 function percentile(values,value,higher=true){
@@ -27,7 +26,7 @@ function roleFit(player){
 
 function confidence(player){
   const fields=['age','position','minutes','rating','value','wage'];
-  const present=fields.filter(k=>player[k]!==null&&player[k]!==undefined&&player[k]!==''&&Number.isFinite(player[k])||['position'].includes(k)&&player[k]).length;
+  const present=fields.filter(k=>(k==='position'&&!!player[k])||(k!=='position'&&Number.isFinite(player[k]))).length;
   let score=(present/fields.length)*70;
   const mins=player.minutes||0;
   score+=mins>=900?30:mins>=450?20:mins>0?10:0;
@@ -41,7 +40,8 @@ function scoreDataset(players){
   const values=players.map(p=>p.value);
   const wages=players.map(p=>p.wage);
   const ages=players.map(p=>p.age);
-  const medianValue=values.filter(Number.isFinite).sort((a,b)=>a-b)[Math.floor(values.filter(Number.isFinite).length/2)]||0;
+  const cleanValues=values.filter(Number.isFinite).sort((a,b)=>a-b);
+  const medianValue=cleanValues[Math.floor(cleanValues.length/2)]||0;
   return players.map(player=>{
     const gp=percentile(goalRates,per90(player.goals,player.minutes),true);
     const ap=percentile(assistRates,per90(player.assists,player.minutes),true);
@@ -74,7 +74,7 @@ function transferDecision(player,budget=65000,maxWeeklyWage=1000){
   let verdict='PASS';
   if(affordable&&s.moneyball>=82&&s.confidence>=60) verdict='BUY';
   else if(affordable&&s.moneyball>=72) verdict='CONSIDER';
-  else if(s.moneyball>=65||s.confidence<55) verdict='WATCH';
+  else if(affordable&&(s.moneyball>=65||s.confidence<55)) verdict='WATCH';
   const reasons=[]; const risks=[];
   if(s.performance>=75) reasons.push('Strong relative performance');
   if(s.value>=75) reasons.push('Good value for money');
