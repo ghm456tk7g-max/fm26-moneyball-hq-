@@ -8,7 +8,7 @@
     "dev": "concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "build:renderer": "vite build",
     "build": "npm run test && npm run build:renderer",
-    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never",
     "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
@@ -33,21 +33,11 @@
     "appId": "de.fm26.moneyballhq",
     "productName": "FM26 MONEYBALL HQ",
     "asar": true,
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "asarUnpack": [
-      "node_modules/better-sqlite3/**/*"
-    ],
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "asarUnpack": ["node_modules/better-sqlite3/**/*"],
     "npmRebuild": true,
-    "directories": {
-      "output": "release"
-    },
-    "win": {
-      "target": ["nsis"]
-    },
+    "directories": {"output": "release"},
+    "win": {"target": ["nsis"]},
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
