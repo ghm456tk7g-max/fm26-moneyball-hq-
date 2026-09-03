@@ -14,6 +14,14 @@ function temporaryDirectory(t) {
   return directory;
 }
 
+function openTestDatabase(t, directory = temporaryDirectory(t)) {
+  const store = openDatabase(directory);
+  // Register cleanup after the directory hook so LIFO hook execution closes
+  // SQLite first. Windows otherwise keeps the database file locked (EBUSY).
+  t.after(() => store.close());
+  return store;
+}
+
 function scoredPlayer(overrides = {}) {
   const raw = {
     name: 'Alex Doe', club: 'FC A', position: 'ST', age: 22, apps: 20, minutes: 1400,
@@ -26,8 +34,7 @@ function scoredPlayer(overrides = {}) {
 
 test('creates the database in user data with migrations and safety pragmas', t => {
   const directory = temporaryDirectory(t);
-  const store = openDatabase(directory);
-  t.after(() => store.close());
+  const store = openTestDatabase(t, directory);
   assert.equal(store.databasePath, path.join(directory, 'moneyball-hq.sqlite'));
   assert.ok(fs.existsSync(store.databasePath));
   assert.equal(store.db.pragma('user_version', { simple: true }), SCHEMA_VERSION);
@@ -36,20 +43,17 @@ test('creates the database in user data with migrations and safety pragmas', t =
 });
 
 test('replacement is transactional and empty imports cannot erase existing data', t => {
-  const store = openDatabase(temporaryDirectory(t));
-  t.after(() => store.close());
+  const store = openTestDatabase(t);
   store.replaceDataset([scoredPlayer()], 'targets');
   assert.throws(() => store.replaceDataset([], 'targets'), /leer/);
   assert.equal(store.listPlayers('targets').length, 1);
 });
 
 test('shortlist survives a repeated import and a unique player club update', t => {
-  const store = openDatabase(temporaryDirectory(t));
-  t.after(() => store.close());
+  const store = openTestDatabase(t);
   store.replaceDataset([scoredPlayer()], 'targets');
   const original = store.listPlayers('targets')[0];
   assert.equal(store.toggleShortlist(original.id), true);
-
   store.replaceDataset([scoredPlayer({ club: 'FC B' })], 'targets');
   const updated = store.listPlayers('targets')[0];
   assert.equal(updated.id, original.id);
@@ -58,14 +62,12 @@ test('shortlist survives a repeated import and a unique player club update', t =
 });
 
 test('removed players cascade out of shortlist and squad players cannot be shortlisted', t => {
-  const store = openDatabase(temporaryDirectory(t));
-  t.after(() => store.close());
+  const store = openTestDatabase(t);
   store.replaceDataset([scoredPlayer()], 'targets');
   const target = store.listPlayers('targets')[0];
   store.toggleShortlist(target.id);
   store.db.prepare('DELETE FROM players WHERE id=?').run(target.id);
   assert.equal(store.db.prepare('SELECT COUNT(*) count FROM shortlist').get().count, 0);
-
   store.replaceDataset([scoredPlayer({ name: 'Squad Player' })], 'squad');
   const squad = store.listPlayers('squad')[0];
   assert.throws(() => store.toggleShortlist(squad.id), /nicht gefunden/);
@@ -73,8 +75,7 @@ test('removed players cascade out of shortlist and squad players cannot be short
 });
 
 test('invalid stored JSON is contained instead of crashing the player list', t => {
-  const store = openDatabase(temporaryDirectory(t));
-  t.after(() => store.close());
+  const store = openTestDatabase(t);
   store.replaceDataset([scoredPlayer()], 'targets');
   store.db.prepare("UPDATE players SET scores_json='broken', tags_json='broken', raw_json='broken'").run();
   const player = store.listPlayers('targets')[0];
@@ -87,7 +88,7 @@ test('invalid stored JSON is contained instead of crashing the player list', t =
 test('settings parsing falls back safely and persists valid settings across restarts', t => {
   const directory = temporaryDirectory(t);
   let store = openDatabase(directory);
-  store.setSetting('club', { transferBudget: 50000, maxWeeklyWage: 800, formation: '4-2-3-1' });
+  store.setSetting('club', { transferBudget: 50000, maxWeeklyWage: 800, formation: '4-3-2-1' });
   store.close();
   store = openDatabase(directory);
   assert.equal(store.getSetting('club', {}).transferBudget, 50000);
@@ -98,8 +99,7 @@ test('settings parsing falls back safely and persists valid settings across rest
 
 test('creates an integrity-checked backup that can be reopened', async t => {
   const directory = temporaryDirectory(t);
-  const store = openDatabase(directory);
-  t.after(() => store.close());
+  const store = openTestDatabase(t, directory);
   store.replaceDataset([scoredPlayer()], 'targets');
   const backupPath = path.join(directory, 'backup.sqlite');
   await store.backupTo(backupPath);
@@ -137,9 +137,7 @@ test('migrates the original schema without losing players or shortlist', t => {
     INSERT INTO shortlist(player_id) VALUES(1);
   `);
   legacy.close();
-
-  const store = openDatabase(directory);
-  t.after(() => store.close());
+  const store = openTestDatabase(t, directory);
   const migrated = store.listPlayers('targets')[0];
   assert.equal(migrated.name, 'Legacy Player');
   assert.equal(migrated.shortlisted, true);
