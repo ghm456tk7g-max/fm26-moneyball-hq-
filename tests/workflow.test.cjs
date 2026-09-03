@@ -21,6 +21,7 @@ test('FM export flows through import, scoring, persistence, shortlist and decisi
   const parsed = importFile(exportPath, 'targets');
   const scored = scoreDataset(parsed.players);
   const store = openDatabase(path.join(directory, 'user data with spaces ä'));
+  // Close SQLite before the parent temp directory cleanup on Windows.
   t.after(() => store.close());
   store.replaceDataset(scored, 'targets');
 
