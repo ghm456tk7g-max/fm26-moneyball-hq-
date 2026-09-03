@@ -2,39 +2,47 @@
 
 Private Windows desktop recruitment and transfer-intelligence application for Football Manager 26.
 
-## What the current MVP does
+## Core workflow
 
-- Imports FM player exports from CSV, TSV and TXT.
-- Recognizes common German and English column names automatically.
-- Parses German/English decimals and K/M currency suffixes.
-- Scores Performance, Value, Financial, Development, Role Fit and Confidence.
-- Keeps Confidence visible so incomplete scouting data is not disguised as certainty.
-- Detects Hidden Gems and budget-friendly/development tags.
-- Stores targets and your own squad separately in a local SQLite database.
-- Provides search, shortlist and squad-position weakness views.
-- Produces BUY / CONSIDER / WATCH / PASS transfer decisions.
-- Calculates max sensible bid, max weekly wage and estimated first-year cost against club constraints.
-- Creates user-selected SQLite backups.
+FM export → validated import → conservative scoring → squad need → shortlist → transfer decision.
 
-## Windows delivery target
+The application deliberately stays focused on recruitment. Match analysis, a manager chronicle, FMF parsing, external APIs and AI chat are outside its scope.
 
-The packaged release is built with Electron and NSIS. The end user does **not** need Python, Node.js, npm, Visual Studio or a manually started local server. The installer creates Start Menu and Desktop shortcuts and leaves the local application database intact on uninstall.
+## Current capabilities
 
-## Get the Windows installer
+- Imports CSV, TSV and TXT exports in UTF-8, UTF-8 BOM, UTF-16 or Windows-1252.
+- Detects comma, semicolon and tab delimiters and common German/English FM column names.
+- Parses German/English decimals, K/M/B currency suffixes and uncertain value ranges conservatively.
+- Reports missing columns, invalid values, skipped rows and merged duplicate players.
+- Scores Performance, Value, Financial, Development, Role Fit, Confidence and Moneyball by relevant position group.
+- Dampens percentiles from small comparison groups and treats missing values as unknown rather than zero performance.
+- Applies explicit confidence gates below 450 minutes and below 900 minutes.
+- Requires sufficient data quality before assigning Hidden Gem, Development or Budget Friendly tags.
+- Stores targets, squad data, settings and shortlist state in a local SQLite database under Electron's per-user application-data directory.
+- Preserves shortlist entries when the same player is reimported and uses transactional dataset replacement.
+- Produces conservative BUY / CONSIDER / WATCH / PASS decisions. Unknown or breached financial constraints cannot produce BUY or CONSIDER.
+- Compares a target's evidenced role profile with matching players in the imported squad.
+- Creates integrity-checked SQLite backups and restores them only after confirmation and an automatic safety backup.
 
-GitHub Actions builds `FM26-MONEYBALL-HQ-Windows` on pushes to `main`. Open the latest successful **Windows Build** workflow run and download its artifact. Inside is the generated `.exe` installer.
+## Windows installation
 
-## Local development
+GitHub Actions builds the NSIS installer named in the `FM26-MONEYBALL-HQ-Windows` artifact. Download the artifact from the latest successful **Windows Build** workflow run and start the contained `.exe`.
+
+The installed application includes its runtime. The end user does not need Python, Node.js, npm, Visual Studio, .NET, a local server, PowerShell, CMD or a batch file. The installer creates Start Menu and Desktop shortcuts. App data remains in the user's application-data directory and is not deleted by the uninstaller.
+
+## Development checks
+
+Use Node.js 22 or 24:
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run build
 ```
 
-Run tests with `npm test`. Build the Windows installer on Windows with `npm run dist:win`.
+`npm run build` runs the complete Node test suite, strict TypeScript checking and the production renderer build. On Windows, create the installer with:
 
-## Product focus
+```bash
+npm run dist:win
+```
 
-Import -> analysis -> squad need -> hidden gems -> transfer decision.
-
-Explicitly out of V1: Match Analysis, Manager Chronicle and FMF LAB.
+The committed lockfile and `npm ci` keep local and CI dependency resolution reproducible.

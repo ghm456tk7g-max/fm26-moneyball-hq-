@@ -1,14 +1,19 @@
+import type { DatasetType, ImportResult, Player, Settings, TransferDecision } from './types';
+
 export {};
+
 declare global {
   interface Window {
     moneyball: {
-      importPlayers:(datasetType:'targets'|'squad')=>Promise<any>;
-      listPlayers:(datasetType:'targets'|'squad')=>Promise<any[]>;
-      toggleShortlist:(id:number)=>Promise<boolean>;
-      getSettings:()=>Promise<any>;
-      saveSettings:(settings:any)=>Promise<any>;
-      backup:()=>Promise<any>;
-      transferDecision:(player:any)=>Promise<any>;
-    }
+      startupStatus: () => Promise<{ notice: string }>;
+      importPlayers: (datasetType: DatasetType) => Promise<ImportResult>;
+      listPlayers: (datasetType: DatasetType) => Promise<Player[]>;
+      toggleShortlist: (id: number) => Promise<boolean>;
+      getSettings: () => Promise<Settings>;
+      saveSettings: (settings: Settings) => Promise<Settings>;
+      backup: () => Promise<{ canceled: boolean; path?: string }>;
+      restoreBackup: () => Promise<{ canceled: boolean; safetyPath?: string }>;
+      transferDecision: (playerId: number) => Promise<TransferDecision>;
+    };
   }
 }
