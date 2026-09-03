@@ -8,17 +8,20 @@ const { openDatabase, SCHEMA_VERSION, validateDatabaseFile } = require('../elect
 const { playerIdentityKey } = require('../electron/importer.cjs');
 const { scoreDataset } = require('../electron/scoring.cjs');
 
-function temporaryDirectory(t) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'moneyball-db-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  return directory;
+function temporaryDirectory() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'moneyball-db-'));
 }
 
-function openTestDatabase(t, directory = temporaryDirectory(t)) {
+function cleanupDirectory(t, directory) {
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+}
+
+function openTestDatabase(t, directory = temporaryDirectory()) {
   const store = openDatabase(directory);
-  // Register cleanup after the directory hook so LIFO hook execution closes
-  // SQLite first. Windows otherwise keeps the database file locked (EBUSY).
+  // node:test runs after-hooks in registration order. Close SQLite first,
+  // then remove the temp directory so Windows never sees a locked .sqlite file.
   t.after(() => store.close());
+  cleanupDirectory(t, directory);
   return store;
 }
 
@@ -33,7 +36,7 @@ function scoredPlayer(overrides = {}) {
 }
 
 test('creates the database in user data with migrations and safety pragmas', t => {
-  const directory = temporaryDirectory(t);
+  const directory = temporaryDirectory();
   const store = openTestDatabase(t, directory);
   assert.equal(store.databasePath, path.join(directory, 'moneyball-hq.sqlite'));
   assert.ok(fs.existsSync(store.databasePath));
@@ -86,7 +89,8 @@ test('invalid stored JSON is contained instead of crashing the player list', t =
 });
 
 test('settings parsing falls back safely and persists valid settings across restarts', t => {
-  const directory = temporaryDirectory(t);
+  const directory = temporaryDirectory();
+  cleanupDirectory(t, directory);
   let store = openDatabase(directory);
   store.setSetting('club', { transferBudget: 50000, maxWeeklyWage: 800, formation: '4-3-2-1' });
   store.close();
@@ -98,7 +102,7 @@ test('settings parsing falls back safely and persists valid settings across rest
 });
 
 test('creates an integrity-checked backup that can be reopened', async t => {
-  const directory = temporaryDirectory(t);
+  const directory = temporaryDirectory();
   const store = openTestDatabase(t, directory);
   store.replaceDataset([scoredPlayer()], 'targets');
   const backupPath = path.join(directory, 'backup.sqlite');
@@ -110,7 +114,8 @@ test('creates an integrity-checked backup that can be reopened', async t => {
 });
 
 test('rejects files that are SQLite databases but not application backups', t => {
-  const directory = temporaryDirectory(t);
+  const directory = temporaryDirectory();
+  cleanupDirectory(t, directory);
   const wrongPath = path.join(directory, 'wrong.sqlite');
   const wrong = new Database(wrongPath);
   wrong.exec('CREATE TABLE unrelated(id INTEGER)');
@@ -119,7 +124,7 @@ test('rejects files that are SQLite databases but not application backups', t =>
 });
 
 test('migrates the original schema without losing players or shortlist', t => {
-  const directory = temporaryDirectory(t);
+  const directory = temporaryDirectory();
   const legacyPath = path.join(directory, 'moneyball-hq.sqlite');
   const legacy = new Database(legacyPath);
   legacy.exec(`
