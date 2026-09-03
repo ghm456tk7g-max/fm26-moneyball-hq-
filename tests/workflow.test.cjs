@@ -9,7 +9,6 @@ const { scoreDataset, transferDecision } = require('../electron/scoring.cjs');
 
 test('FM export flows through import, scoring, persistence, shortlist and decision', t => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'moneyball-flow-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const exportPath = path.join(directory, 'targets.csv');
   const rows = ['Name;Club;Position;Age;Minutes;Goals;Assists;Av Rat;Value;Wage'];
   rows.push('Prime Target;FC Value;ST;20;1800;20;9;7,50;€10K;€250');
@@ -21,8 +20,8 @@ test('FM export flows through import, scoring, persistence, shortlist and decisi
   const parsed = importFile(exportPath, 'targets');
   const scored = scoreDataset(parsed.players);
   const store = openDatabase(path.join(directory, 'user data with spaces ä'));
-  // Close SQLite before the parent temp directory cleanup on Windows.
   t.after(() => store.close());
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
   store.replaceDataset(scored, 'targets');
 
   const target = store.listPlayers('targets').find(player => player.name === 'Prime Target');
