@@ -107,6 +107,7 @@ function transferDecision(player,budget=65000,maxWeeklyWage=1000){
   if(s.development>=65&&conf>=55) reasons.push('Gutes Entwicklungspotenzial');
   if(conf<55) risks.push('Begrenzte oder unvollständige Daten');
   if(!hasValue) risks.push('Transferwert unbekannt');
+  else risks.push('Ablöse wird mangels Angebotsdaten durch den Marktwert angenähert');
   if(!hasWage) risks.push('Gehaltsforderung unbekannt');
   if((hasValue&&value>budget)||(hasWage&&wage>maxWeeklyWage)) risks.push('Außerhalb der konfigurierten Clubgrenzen');
   if(hasWage&&wage>maxWeeklyWage*.8) risks.push('Hohe Gehaltsbelastung');

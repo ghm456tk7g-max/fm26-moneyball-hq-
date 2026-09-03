@@ -49,5 +49,5 @@ test('unknown financials can never produce BUY or CONSIDER',()=>{
 });
 test('strong affordable and sufficiently evidenced player may be recommended',()=>{
   const d=transferDecision({scores:{moneyball:82,confidence:75,performance:80,value:75,roleFit:80},value:12000,wage:250},65000,1000);
-  assert.equal(d.verdict,'BUY');assert.equal(d.firstYearCost,25000);assert.ok(d.maxBid<=65000*.45);assert.ok(d.maxWage<=1000);
+  assert.equal(d.verdict,'BUY');assert.equal(d.firstYearCost,25000);assert.ok(d.maxBid<=65000*.45);assert.ok(d.maxWage<=1000);assert.ok(d.risks.some(r=>r.includes('Marktwert')));
 });
