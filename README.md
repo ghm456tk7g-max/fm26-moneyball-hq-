@@ -26,9 +26,11 @@ The application deliberately stays focused on recruitment. Match analysis, a man
 
 ## Windows installation
 
-GitHub Actions builds the NSIS installer named in the `FM26-MONEYBALL-HQ-Windows` artifact. Download the artifact from the latest successful **Windows Build** workflow run and start the contained `.exe`.
+GitHub Actions builds `FM26_Moneyball_HQ_Setup.exe` in the `FM26-MONEYBALL-HQ-Windows` artifact. Download the artifact from the latest successful **Windows Build** workflow run and start that installer.
 
 The installed application includes its runtime. The end user does not need Python, Node.js, npm, Visual Studio, .NET, a local server, PowerShell, CMD or a batch file. The installer creates Start Menu and Desktop shortcuts. App data remains in the user's application-data directory and is not deleted by the uninstaller.
+
+The Windows workflow silently installs the generated package, verifies the executable and both shortcuts, launches the installed app twice, checks automatic database creation, uninstalls the app and confirms that user data was retained.
 
 ## Development checks
 

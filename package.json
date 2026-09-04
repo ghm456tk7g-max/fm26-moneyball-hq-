@@ -22,7 +22,8 @@
     "asarUnpack": ["node_modules/better-sqlite3/**/*"],
     "npmRebuild": true,
     "directories": { "output": "release" },
+    "artifactName": "FM26_Moneyball_HQ_Setup.${ext}",
     "win": { "target": ["nsis"] },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "FM26 MONEYBALL HQ", "deleteAppDataOnUninstall": false }
+    "nsis": { "oneClick": false, "perMachine": false, "allowElevation": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "FM26 MONEYBALL HQ", "deleteAppDataOnUninstall": false }
   }
 }

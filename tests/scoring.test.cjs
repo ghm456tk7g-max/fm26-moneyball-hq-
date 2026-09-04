@@ -101,6 +101,7 @@ test('reliable high-performing affordable player can receive a positive verdict 
   assert.ok(['BUY', 'CONSIDER'].includes(decision.verdict));
   assert.ok(decision.maxBid <= 65000);
   assert.ok(decision.maxWage <= 1000);
+  assert.ok(decision.risks.some(risk => risk.includes('angenähert')));
 });
 
 test('missing finances can never produce BUY or CONSIDER', () => {

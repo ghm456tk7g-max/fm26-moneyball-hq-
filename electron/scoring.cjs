@@ -276,6 +276,7 @@ function transferDecision(player, budget = 65000, maxWeeklyWage = 1000, squad = 
   if (confidenceScore < 60) risks.push('Datenlage zu unsicher für eine positive Empfehlung');
   if (!valueKnown) risks.push('Marktwert fehlt');
   else if (!withinTransferBudget) risks.push('Marktwert übersteigt das Transferbudget');
+  if (valueKnown) risks.push('Ablöse wird mangels Angebotsdaten durch den Marktwert angenähert');
   if (!wageKnown) risks.push('Gehaltsforderung fehlt');
   else if (!withinWageBudget) risks.push('Gehalt übersteigt die Clubgrenze');
   else if (wageBudget > 0 && player.wage > wageBudget * 0.8) risks.push('Hohe Auslastung des Gehaltslimits');
