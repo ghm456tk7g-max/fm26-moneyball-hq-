@@ -263,9 +263,9 @@ export default function App() {
         <div className={`verdict ${decision.data.verdict.toLowerCase()}`}>{decision.data.verdict}</div>
         <div className="decisionGrid">
           <Card title="Moneyball" value={String(decision.player.scores.moneyball)} sub={`Confidence ${decision.player.scores.confidence}`} />
-          <Card title="Max. Bid" value={money(decision.data.maxBid)} sub="konservative Obergrenze" />
+          <Card title="Max. Bid" value={money(decision.data.maxBid)} sub="marktwertbasierte Obergrenze" />
           <Card title="Max. Wage" value={money(decision.data.maxWage)} sub="pro Woche" />
-          <Card title="1. Jahr" value={money(decision.data.firstYearCost)} sub={decision.data.budgetImpact == null ? 'Finanzdaten unvollständig' : `${decision.data.budgetImpact}% des Transferbudgets + Gehalt`} />
+          <Card title="1. Jahr (Schätzung)" value={money(decision.data.firstYearCost)} sub={decision.data.budgetImpact == null ? 'Finanzdaten unvollständig' : `Marktwert (${decision.data.budgetImpact}% Budget) + Jahresgehalt`} />
         </div>
         <div className="decisionColumns">
           <section><h3>Dafür</h3>{decision.data.reasons.length ? <ul>{decision.data.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul> : <p className="muted">Kein ausreichend belastbarer positiver Trigger.</p>}</section>
