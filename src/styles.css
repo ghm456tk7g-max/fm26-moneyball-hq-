@@ -29,6 +29,8 @@ nav button { text-align: left; border-color: transparent; }
 .asideFoot b { font-size: 11px; color: #45f28c; margin-top: 5px; }
 
 main { padding: 28px 32px; overflow: auto; }
+.fatalPanel { min-height: 100vh; display: grid; place-items: center; }
+.fatalPanel .panel { width: min(620px, 90vw); text-align: center; padding: 36px; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
 header p, .muted { color: #8ca1b4; }
 .actions, .settingsActions { display: flex; flex-wrap: wrap; gap: 8px; }

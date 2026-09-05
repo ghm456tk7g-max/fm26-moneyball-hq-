@@ -1,6 +1,6 @@
 {
   "name": "fm26-moneyball-hq",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "FM26 Moneyball HQ - recruitment and transfer intelligence for Football Manager 26",
   "main": "electron/main.cjs",

@@ -37,9 +37,15 @@ jobs:
           if (-not (Test-Path $desktopLink)) { throw "Desktop shortcut missing" }
           if (-not (Test-Path $startLink)) { throw "Start Menu shortcut missing" }
 
-          $app = Start-Process -FilePath $appPath -PassThru
+          $smokeCsv = (Resolve-Path "sample-data/fm26-import-smoke.csv").Path
+          $smokeResult = Join-Path $env:RUNNER_TEMP "fm26-installed-import-smoke.json"
+          $env:FM26_IMPORT_SMOKE_RESULT = $smokeResult
+          $app = Start-Process -FilePath $appPath -ArgumentList @("--import-smoke=$smokeCsv") -PassThru
           Start-Sleep -Seconds 8
           if ($app.HasExited) { throw "Installed application exited during first launch" }
+          if (-not (Test-Path $smokeResult)) { throw "Installed application did not finish the CSV import smoke test" }
+          $importResult = Get-Content $smokeResult -Raw | ConvertFrom-Json
+          if (-not $importResult.ok -or $importResult.rowCount -ne 18) { throw "Installed CSV import failed: $(Get-Content $smokeResult -Raw)" }
           $database = Join-Path $env:APPDATA "fm26-moneyball-hq/moneyball-hq.sqlite"
           if (-not (Test-Path $database)) { throw "User database was not created" }
           taskkill /PID $app.Id /T /F | Out-Null

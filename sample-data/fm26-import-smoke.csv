@@ -1,0 +1,19 @@
+Aufgestellt;Info;Alter;Position;Spieler;Fähigkeit;Potenzial;Endet;Eins;Transferwert;Minuten;Gehalt;Vorl/90;Vor;Ø
+TW;;19;TW;Test Spieler 01;4,5;5;31.12.2027;3;14K € - 140K €;270;130 €/W.;0,0;0;6,10
+V (R);;26;V/FV/M (R);Test Spieler 02;5;5;31.12.2026;23 (1);90K € - 170K €;1892;230 €/W.;0,1;3;6,76
+V (Z);;27;V (Z);Test Spieler 03;4,5;4,5;31.12.2026;3;2K € - 55K €;270;120 €/W.;0,0;0;6,40
+V (Z);;25;V (Z);Test Spieler 04;5;4,5;31.12.2027;3;3,5K € - 35K €;254;160 €/W.;0,0;0;6,20
+V (L);;23;V (RL);Test Spieler 05;4,5;5;31.12.2026;25;18K € - 190K €;2269;290 €/W.;0,2;5;6,82
+DM;;18;V (Z), DM, M (Z);Test Spieler 06;5;4;31.12.2027;24;28K € - 65K €;1692;120 €/W.;0,0;0;6,28
+DM;;17;DM, M (Z);Test Spieler 07;4,5;5;31.12.2027;3;5K € - 50K €;238;140 €/W.;0,0;0;6,30
+OM (R);;20;OM (RZ);Test Spieler 08;5;5;31.12.2027;24;10K € - 95K €;2042;230 €/W.;0,0;0;6,76
+OM (Z);;18;M/OM (Z);Test Spieler 09;5;5;31.12.2027;0;0 € - 95K €;0;130 €/W.;0,0;0;-
+OM (L);Gelb;20;OM (RL), ST (Z);Test Spieler 10;4,5;5;31.12.2027;3;7K € - 70K €;270;240 €/W.;0,0;0;6,30
+E1;Ver;26;TW;Test Spieler 11;5;4,5;31.12.2026;19;85K € - 170K €;1720;290 €/W.;0,0;0;6,42
+E2;;18;M (R);Test Spieler 12;Unbekannt;Unbekannt;?;0;0 €;0;n.a.;0,0;0;-
+E3;;19;OM (RL);Test Spieler 13;4,5;4;31.12.2027;1 (2);4,5K € - 45K €;149;140 €/W.;0,0;0;6,60
+E4;;19;V (Z);Test Spieler 14;Unbekannt;Unbekannt;?;0;0 €;0;n.a.;0,0;0;-
+E5;;20;M (R);Test Spieler 15;Unbekannt;Unbekannt;?;0;0 €;0;n.a.;0,0;0;-
+E6;;18;ST (Z);Test Spieler 16;Unbekannt;Unbekannt;?;0;0 €;0;n.a.;0,0;0;-
+E7;;18;OM (LZ);Test Spieler 17;4,5;5;31.12.2027;2 (1);45K € - 100K €;224;150 €/W.;0,0;0;6,47
+-;;17;ST (Z);Test Spieler 18;Unbekannt;Unbekannt;?;0;0 €;0;n.a.;0,0;0;-
