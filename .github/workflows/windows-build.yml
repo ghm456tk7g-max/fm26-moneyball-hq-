@@ -37,9 +37,29 @@ jobs:
           if (-not (Test-Path $desktopLink)) { throw "Desktop shortcut missing" }
           if (-not (Test-Path $startLink)) { throw "Start Menu shortcut missing" }
 
-          $app = Start-Process -FilePath $appPath -PassThru
+          $smokeCsv = (Resolve-Path "sample-data/fm26-import-smoke.csv").Path
+          $smokeResult = Join-Path $env:RUNNER_TEMP "fm26-installed-import-smoke.json"
+          $env:FM26_IMPORT_SMOKE_RESULT = $smokeResult
+          $app = Start-Process -FilePath $appPath -ArgumentList @("--import-smoke=$smokeCsv") -PassThru
           Start-Sleep -Seconds 8
-          if ($app.HasExited) { throw "Installed application exited during first launch" }
+          if ($app.HasExited) {
+            $logPath = Join-Path $env:APPDATA "fm26-moneyball-hq/logs/app.log"
+            Write-Host "Installed application exit code: $($app.ExitCode)"
+            if (Test-Path $smokeResult) {
+              Write-Host "Import smoke result:"
+              Get-Content $smokeResult -Raw
+            }
+            if (Test-Path $logPath) {
+              Write-Host "Application log:"
+              Get-Content $logPath
+            } else {
+              Write-Host "Application log was not created: $logPath"
+            }
+            throw "Installed application exited during first launch (code $($app.ExitCode))"
+          }
+          if (-not (Test-Path $smokeResult)) { throw "Installed application did not finish the CSV import smoke test" }
+          $importResult = Get-Content $smokeResult -Raw | ConvertFrom-Json
+          if (-not $importResult.ok -or $importResult.rowCount -ne 18) { throw "Installed CSV import failed: $(Get-Content $smokeResult -Raw)" }
           $database = Join-Path $env:APPDATA "fm26-moneyball-hq/moneyball-hq.sqlite"
           if (-not (Test-Path $database)) { throw "User database was not created" }
           taskkill /PID $app.Id /T /F | Out-Null
@@ -54,6 +74,7 @@ jobs:
           if ($uninstall.ExitCode -ne 0) { throw "Uninstaller exit code: $($uninstall.ExitCode)" }
           if (-not (Test-Path $database)) { throw "Uninstall unexpectedly deleted user data" }
       - name: Upload installer
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: FM26-MONEYBALL-HQ-Windows

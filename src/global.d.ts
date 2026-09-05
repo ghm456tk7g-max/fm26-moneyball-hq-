@@ -6,6 +6,7 @@ declare global {
   interface Window {
     moneyball: {
       startupStatus: () => Promise<{ notice: string }>;
+      reportRendererError: (message: string, componentStack: string) => Promise<boolean>;
       importPlayers: (datasetType: DatasetType) => Promise<ImportResult>;
       listPlayers: (datasetType: DatasetType) => Promise<Player[]>;
       toggleShortlist: (id: number) => Promise<boolean>;

@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('moneyball', Object.freeze({
   startupStatus: () => ipcRenderer.invoke('app:startup-status'),
+  reportRendererError: (message, componentStack) => ipcRenderer.invoke('app:renderer-error', message, componentStack),
   importPlayers: datasetType => ipcRenderer.invoke('import:players', datasetType),
   listPlayers: datasetType => ipcRenderer.invoke('players:list', datasetType),
   toggleShortlist: id => ipcRenderer.invoke('shortlist:toggle', id),

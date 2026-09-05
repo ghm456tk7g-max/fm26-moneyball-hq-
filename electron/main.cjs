@@ -2,14 +2,17 @@ const { app, BrowserWindow, dialog, ipcMain, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { DB_FILENAME, openDatabase, validateDatabaseFile } = require('./db.cjs');
-const { importFile } = require('./importer.cjs');
-const { scoreDataset, transferDecision } = require('./scoring.cjs');
+const { runImportTask } = require('./import-task.cjs');
+const { createLogger } = require('./logger.cjs');
+const { transferDecision } = require('./scoring.cjs');
 const { DEFAULT_SETTINGS, normalizeSettings } = require('./settings.cjs');
 
 const DATASET_TYPES = new Set(['targets', 'squad']);
 let store;
 let mainWindow;
 let startupNotice = '';
+let rendererRecoveryInProgress = false;
+let logger = { logPath: '', info: () => undefined, error: () => undefined };
 
 function timestamp() {
   return new Date().toISOString().replace(/[:.]/g, '-');
@@ -72,6 +75,14 @@ function createWindow() {
   mainWindow.setMenu(null);
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.webContents.on('will-navigate', event => event.preventDefault());
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    logger.error('renderer-process-gone', details);
+    if (details.reason === 'clean-exit' || rendererRecoveryInProgress || !mainWindow || mainWindow.isDestroyed()) return;
+    rendererRecoveryInProgress = true;
+    startupNotice = 'Die Oberfläche wurde nach einem unerwarteten Fehler automatisch wiederhergestellt. Details stehen im lokalen Fehlerprotokoll.';
+    mainWindow.reload();
+    setTimeout(() => { rendererRecoveryInProgress = false; }, 3000);
+  });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   const devServer = process.env.VITE_DEV_SERVER_URL;
   const load = devServer
@@ -90,6 +101,7 @@ function handle(channel, handler) {
       return await handler(...args);
     } catch (error) {
       console.error(`[${channel}]`, error);
+      logger.error('ipc-error', { channel, message: errorMessage(error), stack: error instanceof Error ? error.stack : undefined });
       throw new Error(errorMessage(error));
     }
   });
@@ -100,6 +112,13 @@ function registerIpcHandlers() {
     const notice = startupNotice;
     startupNotice = '';
     return { notice };
+  });
+  handle('app:renderer-error', (message, componentStack) => {
+    logger.error('renderer-ui-error', {
+      message: String(message || 'Unbekannter Oberflächenfehler').slice(0, 500),
+      componentStack: String(componentStack || '').slice(0, 4000)
+    });
+    return true;
   });
   handle('players:list', type => {
     if (!DATASET_TYPES.has(type)) throw new Error('Ungültiger Datensatztyp.');
@@ -116,19 +135,26 @@ function registerIpcHandlers() {
       ]
     });
     if (pick.canceled || !pick.filePaths[0]) return { canceled: true };
-    const parsed = importFile(pick.filePaths[0], type);
-    const scored = scoreDataset(parsed.players);
-    store.replaceDataset(scored, type);
-    return {
-      canceled: false,
-      rowCount: scored.length,
-      sourceRowCount: parsed.sourceRowCount,
-      duplicateCount: parsed.duplicateCount,
-      warnings: parsed.warnings,
-      map: parsed.map,
-      encoding: parsed.encoding,
-      delimiter: parsed.delimiter
-    };
+    const filePath = pick.filePaths[0];
+    logger.info('import-started', { datasetType: type, fileName: path.basename(filePath), size: fs.statSync(filePath).size });
+    try {
+      const result = await runImportTask(filePath, type);
+      store.replaceDataset(result.scored, type);
+      logger.info('import-completed', { datasetType: type, fileName: path.basename(filePath), rowCount: result.scored.length, warnings: result.warnings.length });
+      return {
+        canceled: false,
+        rowCount: result.scored.length,
+        sourceRowCount: result.sourceRowCount,
+        duplicateCount: result.duplicateCount,
+        warnings: result.warnings,
+        map: result.map,
+        encoding: result.encoding,
+        delimiter: result.delimiter
+      };
+    } catch (error) {
+      logger.error('import-failed', { datasetType: type, fileName: path.basename(filePath), message: errorMessage(error), stack: error instanceof Error ? error.stack : undefined });
+      throw new Error(`${errorMessage(error)} Fehlerprotokoll: ${logger.logPath}`);
+    }
   });
   handle('shortlist:toggle', id => store.toggleShortlist(Number(id)));
   handle('settings:get', () => currentSettings());
@@ -199,6 +225,29 @@ function registerIpcHandlers() {
   });
 }
 
+async function runImportSmokeIfRequested() {
+  const argument = process.argv.find(value => value.startsWith('--import-smoke='));
+  const resultPath = process.env.FM26_IMPORT_SMOKE_RESULT;
+  if (!argument || !resultPath) return;
+  const filePath = argument.slice('--import-smoke='.length);
+  let result;
+  try {
+    const imported = await runImportTask(filePath, 'targets');
+    store.replaceDataset(imported.scored, 'targets');
+    result = { ok: true, rowCount: imported.scored.length };
+  } catch (error) {
+    result = { ok: false, error: errorMessage(error) };
+  }
+  fs.writeFileSync(resultPath, JSON.stringify(result), 'utf8');
+}
+
+process.on('unhandledRejection', error => logger.error('unhandled-rejection', error));
+process.on('uncaughtException', error => {
+  logger.error('uncaught-exception', error);
+  try { dialog.showErrorBox('FM26 MONEYBALL HQ – unerwarteter Fehler', `${errorMessage(error)}\n\nFehlerprotokoll: ${logger.logPath || 'nicht verfügbar'}`); } catch {}
+  app.exit(1);
+});
+
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 if (!hasSingleInstanceLock) {
   app.quit();
@@ -214,12 +263,16 @@ if (!hasSingleInstanceLock) {
     app.setAppUserModelId('de.fm26.moneyballhq');
     session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
     try {
+      logger = createLogger(app.getPath('userData'));
+      logger.info('application-started', { version: app.getVersion(), packaged: app.isPackaged, platform: process.platform, arch: process.arch });
       store = initializeDatabase();
       if (!store.getSetting('club', null)) store.setSetting('club', DEFAULT_SETTINGS);
       currentSettings();
       registerIpcHandlers();
       createWindow();
+      void runImportSmokeIfRequested();
     } catch (error) {
+      logger.error('application-start-failed', error);
       dialog.showErrorBox('Lokale Datenbank konnte nicht geöffnet werden', `${errorMessage(error)}\n\nDie Daten wurden nicht gelöscht.`);
       app.quit();
     }

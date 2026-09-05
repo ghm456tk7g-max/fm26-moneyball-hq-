@@ -23,6 +23,8 @@ The application deliberately stays focused on recruitment. Match analysis, a man
 - Produces conservative BUY / CONSIDER / WATCH / PASS decisions. Unknown or breached financial constraints cannot produce BUY or CONSIDER.
 - Compares a target's evidenced role profile with matching players in the imported squad.
 - Creates integrity-checked SQLite backups and restores them only after confirmation and an automatic safety backup.
+- Runs parsing and scoring in an isolated worker so a malformed export cannot terminate the desktop window.
+- Writes import and crash diagnostics to `%APPDATA%\fm26-moneyball-hq\logs\app.log` without storing the CSV contents.
 
 ## Windows installation
 
@@ -30,7 +32,7 @@ GitHub Actions builds `FM26_Moneyball_HQ_Setup.exe` in the `FM26-MONEYBALL-HQ-Wi
 
 The installed application includes its runtime. The end user does not need Python, Node.js, npm, Visual Studio, .NET, a local server, PowerShell, CMD or a batch file. The installer creates Start Menu and Desktop shortcuts. App data remains in the user's application-data directory and is not deleted by the uninstaller.
 
-The Windows workflow silently installs the generated package, verifies the executable and both shortcuts, launches the installed app twice, checks automatic database creation, uninstalls the app and confirms that user data was retained.
+The Windows workflow silently installs the generated package, verifies the executable and both shortcuts, imports an 18-player German FM26 CSV through the installed application, launches the app a second time, checks automatic database creation, uninstalls the app and confirms that user data was retained.
 
 ## Development checks
 
